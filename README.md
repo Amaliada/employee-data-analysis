@@ -123,7 +123,7 @@ Also includes horizontal bar charts for departmental distribution.
 
 ## 🪪 License
 
-This project is released under the **MIT License** © 2025 [Your Name]
+This project is released under the **MIT License** © 2025 [Bodea Dana]
 
 ---
 
@@ -131,7 +131,7 @@ This project is released under the **MIT License** © 2025 [Your Name]
 
 Created by **Bodea Dana**  
 📅 Year: 2025  
-🔗 GitHub: [YourUsername](https://github.com/YourUsername)
+🔗 GitHub: [Dana Bodea](https://github.com/Amaliada)
 
 ---
 
