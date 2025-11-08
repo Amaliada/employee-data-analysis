@@ -1,0 +1,429 @@
+# Data Cleaning and Analysis Notes
+
+## 1. Overview
+This project started from **two separate Excel datasets** containing employee information.  
+The goal was to **merge, clean, and analyze** them in order to explore employee trends and company evolution over time.
+
+The two datasets were:
+- `Dataset 1`: Employee data from the initial source (e.g. Data )
+- `Dataset 2`: Updated employee data  ( India Staff )
+
+After merging, I created a unified file:  
+> **All_Staff**
+
+This file includes multiple sheets used for data cleaning, calculations, and visualization.
+
+---
+
+## 2. Data Cleaning Process
+
+### a. Merging Datasets
+- Both datasets were checked to ensure they shared the same structure (column names, order, and data types).
+- Renamed inconsistent columns (`DOJ` → `Date Joined`, etc.).
+- Appended the second dataset below the first using Excel.
+- Added a helper column **Source** to indicate the origin of each record.
+- Removed duplicate records using **Remove Duplicates**.
+
+### b. Cleaning and Standardization
+- **Dates:** Converted all `Date Joined` entries to proper date format.
+- **Salaries:** Ensured consistent numeric formatting in USD (removed currency symbols and text).
+- **Missing values:** Replaced blanks in `Department` or `Gender` with “Unknown”.
+- **Text cleanup:** Used `TRIM()` and `CLEAN()` to remove spaces and invisible characters.
+
+## Sheet: KPIs & Information Finder
+
+**Purpose.** This sheet summarizes key HR metrics and provides a quick lookup area to retrieve employee details using Excel lookup functions. It references the unified table **`staff`** created from the two original datasets.
+
+### Inputs
+- Source table: `staff` (structured Excel Table).
+- Columns used: `Name`, `Gender`, `Department`, `Age`, `Date Joined`, `Salary`, `Bonus`, `Country`, `Rating`, `Tenure`, `Rating as number`.
+
+### Calculated helper fields
+- **Tenure (days)**  
+  Calculates the number of days since `Date Joined`:
+  ```excel
+  =TODAY() - [@Date Joined]
+
+Information Finder (lookups)
+
+A compact panel to fetch details for a selected employee (e.g., “Lindy Guillet”):
+
+Employee selector
+Create a drop-down of names using Data Validation → List → =staff[Name].
+
+Lookups with XLOOKUP (preferred): =XLOOKUP(O13,staff[Name],staff[[Gender]:[Tenure]])
+
+## Sheet: Department Information Finder
+
+**Purpose.**  
+This sheet allows users to dynamically view all employees belonging to a specific department, along with their salaries and performance ratings.  
+By simply changing the department name, the list automatically updates through advanced Excel formulas.
+
+---
+
+### Functionality
+The sheet includes:
+- A single input cell for the **Department Name** (e.g., “HR”, “Sales”, “Finance”).
+- An automatic count of employees in that department.
+- A dynamically generated list showing:
+  - Employee names  
+  - Salary (USD)  
+  - Rating (performance category)
+
+---
+
+### Key Formulas Used
+
+####  Department filter formula
+Used to extract only rows from the `staff` table where the Department matches the input in cell `C5`:
+
+```excel
+=FILTER(staff, staff[Department]=C5)
+Selecting specific columns
+
+To limit the output to only Name, Salary, and Rating, the function CHOOSECOLS is used:
+
+=CHOOSECOLS(FILTER(staff, staff[Department]=C5), 1, 6, 7)
+Sorting the filtered results
+
+The results are sorted in descending order of salary (highest to lowest):
+
+=SORT(CHOOSECOLS(FILTER(staff, staff[Department]=C5),1,6,7),2,-1)
+
+
+2 → sorts by the second selected column (Salary)
+
+-1 → descending order
+
+Counting employees in the selected department
+=COUNTIFS(staff[Department], C5)
+Notes
+
+The Department Name cell is formatted with Data Validation to prevent invalid entries.
+
+Results auto-refresh every time the department name changes.
+
+Salaries are formatted as Currency (USD).
+
+The setup can easily be extended to show additional columns such as Country, Tenure, or Bonus.
+Outcome.
+This sheet provides a department-level lookup dashboard, letting users instantly see all employees in any department, along with their pay and rating, without needing to filter manually. It demonstrates the power of Excel’s dynamic array formulas such as FILTER, CHOOSECOLS, and SORT.
+
+## Sheet: Male vs Female (Gender Comparison)
+
+**Purpose.**  
+This sheet compares male and female employees across key HR indicators — headcount, average age, average salary, and average tenure — using a PivotTable and a Country slicer for interactive filtering.
+
+---
+
+### Structure and Setup
+- **Data source:** the unified `staff` table from the cleaned dataset.  
+- **Pivot field layout:**
+  - **Rows:** Values (Name, Age, Salary, Tenure)
+  - **Columns:** Gender (Female, Male)
+  - **Values:** 
+    - `Count of Name` (number of employees)
+    - `Average of Age`
+    - `Average of Salary`
+    - `Average of Tenure`
+- **Filters / Slicers:**
+  - Country slicer (`IND`, `NZ`) added to compare results by location.
+
+---
+
+### Calculations in the PivotTable
+| Metric | Description | Example result |
+|---------|--------------|----------------|
+| **Count of Name** | Total number of employees by gender | Female: 43 / Male: 44 |
+| **Average of Age** | Mean age per gender | Female: 31.4 / Male: 30 |
+| **Average of Salary** | Mean salary (USD) per gender | Female: $78,284 / Male: $75,830 |
+| **Average of Tenure** | Mean tenure (days) per gender | Female: 1501 / Male: 1494 |
+
+> **Grand Total** column shows combined company-wide averages.
+
+---
+
+### Interpretation
+- The gender split is nearly even (43 Female, 44 Male).
+- Women show a slightly higher **average age** and **average salary**, though tenure is similar.
+- Using the Country slicer, users can filter the analysis to focus on specific regions (e.g., India vs New Zealand).
+
+---
+
+### Technical details
+- All calculations are handled by the PivotTable engine; no manual formulas required.
+- Values use **Average** aggregation type, not Sum.
+- Formatting:
+  - `Salary` field formatted as Currency (USD)
+  - `Age` and `Tenure` formatted as Number with 1 decimal
+  - `Gender` field acts as the column header
+- Slicer connected to the same PivotTable through **Report Connections**, allowing dynamic updates.
+
+---
+
+### Insights
+This analysis answers key questions such as:
+- How does the gender ratio vary across regions?
+- Is there a gender gap in average salary or tenure?
+- Are women or men more represented in specific countries?
+
+**Outcome.**  
+The “Male vs Female” sheet provides an at-a-glance gender comparison, helping visualize equality and distribution trends in the workforce, both globally and per country.
+
+## Sheet: Salary vs Rating
+
+**Purpose.**  
+This sheet analyzes the relationship between employee **performance rating** and **salary** levels, helping visualize whether higher-rated employees tend to earn more.
+
+---
+
+### Structure
+- **Data source:** Cleaned and unified `staff` table.  
+- **PivotTable fields:**
+  - **Rows:** Rating (Very Poor, Poor, Average, Above Average, Exceptional)
+  - **Values:**  
+    - `Count of Name` → number of employees in each rating category  
+    - `Average of Salary` → mean salary (USD) for that category
+
+---
+
+### Example results
+| Rating | Count of Employees | Average Salary (USD) |
+|---------|--------------------|----------------------|
+| Very Poor | 4 | $92,080 |
+| Poor | 20 | $75,933 |
+| Average | 138 | $77,059 |
+| Above Average | 16 | $78,115 |
+| Exceptional | 6 | $77,423 |
+| **Total** | **184** | **$77,367** |
+
+*(Values may vary slightly depending on updates in the dataset.)*
+
+---
+
+### Chart visualization
+A **Scatter Plot (XY Chart)** titled **“Salary vs. Rating”** was created to illustrate the relationship between the two variables.
+
+- **X-Axis:** Salary (USD)  
+- **Y-Axis:** Rating (numeric scale 1–5)  
+- Each dot represents one employee’s salary and corresponding rating.
+
+This visualization helps to:
+- Identify if higher performance ratings correlate with higher pay.
+- Detect outliers (employees with unusually high/low pay for their rating level).
+- Show clustering of employees around the “Average” rating (score = 3).
+
+---
+
+### Technical setup
+- Numeric conversion for `Rating` was handled through the helper column `Rating as Number`:
+  ```excel
+  =XLOOKUP([@Rating], rating_map[Text], rating_map[Score])
+Insights
+
+Salaries are relatively consistent across most rating levels, with only minor variations.
+
+The “Average” rating group represents the largest portion of employees.
+
+Outliers suggest that high performance doesn’t always guarantee the top pay, indicating potential review needs for reward policies.
+
+Outcome.
+This sheet combines statistical aggregation (via PivotTable) and visual exploration (Scatter Chart) to assess whether performance evaluations influence compensation patterns within the company.
+
+## Sheet: Employee Count Trend Over Time
+
+**Purpose.**  
+This sheet visualizes the evolution of the company’s workforce from **2020 to 2023**, highlighting hiring and contraction trends over time.  
+It combines a PivotTable that counts employees per month with a **line chart** for a clear time-based analysis.
+
+---
+
+### Structure and Data Source
+- **Data Source:** `staff` table (cleaned and unified dataset)
+- **PivotTable fields:**
+  - **Rows:**  
+    - `Year`  
+    - `Month_name` (derived from Date Joined using `=TEXT([@Date Joined],"mmm")`)
+  - **Values:**  
+    - `Count of Name` (number of employees joined that month)
+- **Grand Totals:**  
+  - Shown for each year and overall total (2020–2023).
+
+---
+
+### Chart Design
+- **Chart Type:** Line Chart  
+- **Title:** *Employee Count Trend Over Time*  
+- **X-Axis:** Month and Year  
+- **Y-Axis:** Number of Employees  
+- **Data Labels:** Display count of employees per month  
+- **Data Source Label:** *HR employee records, 2020–2023*  
+- **Insight Box:** Custom text box summarizing the main trend.
+
+---
+
+### Example Output
+| Year | Month | Count of Employees |
+|------|--------|--------------------|
+| 2020 | – | 27 |
+| 2021 | Jan | 4 |
+| 2021 | Feb | 6 |
+| 2021 | Mar | 7 |
+| 2021 | Apr | 5 |
+| 2021 | May | 8 |
+| 2021 | Jun | 9 |
+| 2021 | ... | ... |
+| 2022 | – | 35 |
+| 2023 | Feb | 1 |
+| **Grand Total** |  | **112** |
+
+---
+
+### Insight Interpretation
+> Over the analyzed period, the company’s workforce shows both growth and contraction phases.  
+> Employee count decreased after 2020, stabilized throughout 2021, and reached its peak in 2022, indicating a temporary expansion phase before a slight reduction in 2023.
+
+---
+
+### Technical Notes
+- `Date Joined` was transformed into two helper columns:
+  ```excel
+  =YEAR([@Date Joined])     → Year  
+  =TEXT([@Date Joined],"mmm") → Month_name
+Insights and Usefulness
+
+This visualization allows HR and management to:
+
+Track hiring trends and seasonal patterns over multiple years.
+
+Identify years with high or low recruitment activity.
+
+Forecast potential workforce fluctuations based on historical data.
+
+Outcome.
+The “Employee Count Trend Over Time” sheet provides a clear, data-driven view of how the company’s employee base evolved from 2020 through 2023, supporting strategic workforce planning
+
+## Sheet: Country Comparison Dashboard (India vs New Zealand)
+
+**Purpose.**  
+This dashboard provides a side-by-side comparison between the company’s two main locations — **New Zealand** and **India** — summarizing workforce size, percentage share, and average salary.  
+It also visualizes departmental headcount for each country to highlight structural differences in staffing.
+
+---
+
+### Layout Overview
+The dashboard is divided into two main sections:
+
+1. **Country summary cards (top area)**
+   - Each country (New Zealand and India) displays three KPIs:
+     - **Headcount** – total number of employees.
+     - **Workforce %** – percentage of total global staff.
+     - **Average Salary (USD)** – mean salary for that country.
+   - Example:
+     | Country | Headcount | Workforce % | Avg. Salary (USD) |
+     |----------|------------|--------------|--------------------|
+     | New Zealand | 93 | 46.24 % | $77 ,110 |
+     | India | 91 | 47.25 % | $77 ,628 |
+
+2. **Headcount by Department (section below)**
+   - Two horizontal bar charts compare departmental distribution for each country.
+   - Departments include **Procurement**, **Website**, **Finance**, **Sales**, and others.
+
+---
+
+### Underlying Formulas & PivotTables
+
+#### A. Country metrics
+All metrics are derived from the main `staff` table using aggregation functions:
+
+| Metric | Formula | Description |
+|---------|----------|-------------|
+| **Headcount** | `=COUNTIFS(staff[Country],"NZ")` or `"IND"` | Counts employees by country |
+| **Workforce %** | `=COUNTIFS(staff[Country],"NZ")/COUNTA(staff[Name])` | Share of global workforce |
+| **Average Salary** | `=AVERAGEIFS(staff[Salary], staff[Country],"NZ")` | Mean salary per country |
+
+Values are formatted with **Currency (USD)** and **Percentage** number formats.
+
+#### B. Departmental breakdown
+PivotTables (or dynamic formulas) group employees by department for each country:
+```excel
+=COUNTIFS(staff[Department],"Procurement", staff[Country],"NZ")
+
+Chart Design
+
+Chart type: Horizontal Bar Chart
+
+Title: Headcount by Department
+
+Color scheme:
+
+Blue → New Zealand
+
+Orange → India
+
+Data labels: Enabled to show headcount values.
+
+Axis: Department (Y-axis), Number of Employees (X-axis)
+
+Insights
+
+The workforce is almost evenly split between India and New Zealand (≈ 46 – 47 % each).
+
+Salaries are comparable between the two countries, differing by less than 1 %.
+
+Department structures differ slightly:
+
+In New Zealand, Procurement and Website have the largest teams.
+
+In India, Website and Finance dominate the distribution.
+
+These visual insights help HR and management evaluate resource allocation across regions.
+
+Outcome
+
+The “Country Comparison Dashboard” sheet provides a concise, visual summary of the company’s global presence, allowing management to quickly compare countries in terms of headcount, salary averages, and departmental composition.
+
+---
+
+## Overall Project Summary and Insights
+
+This Excel project demonstrates the full process of **data cleaning, transformation, and analysis** using advanced Excel features on real employee data.
+
+### Key Steps Recap
+1. **Merged two separate datasets** into a unified `staff` table.  
+2. **Cleaned and standardized** data:
+   - Fixed inconsistent column names and formats.  
+   - Handled missing values and removed duplicates.  
+   - Converted salaries into USD and computed tenure and bonuses.  
+3. **Created multiple analytical sheets** for insights:
+   - Employee KPIs and dynamic information finder  
+   - Department-based lookup using `FILTER` and `SORT`  
+   - Gender comparison (male vs female)  
+   - Salary vs Rating analysis with scatter chart  
+   - Employee count trend over time (2020–2023)  
+   - Country comparison dashboard (India vs New Zealand)
+
+### Tools and Functions Used
+- **Excel formulas:** `XLOOKUP`, `VLOOKUP`, `COUNTIFS`, `AVERAGEIFS`, `SORT`, `FILTER`, `CHOOSECOLS`, `TEXT`, `DATEDIF`
+- **PivotTables & PivotCharts** for aggregation and visualization
+- **Dynamic arrays** for automation
+- **Conditional formatting and slicers** for interactivity
+- **Line, bar, and scatter charts** for clear data visualization
+
+### Insights and Outcomes
+- Workforce distribution is nearly equal between India and New Zealand.  
+- Gender ratio is balanced, with minimal salary disparity.  
+- Most employees have “Average” or “Above Average” ratings, and salaries remain consistent across performance levels.  
+- Employee hiring peaked in 2022, showing a temporary expansion before slight stabilization in 2023.  
+- Department structures vary by region, highlighting diverse operational focuses.
+
+---
+
+**Conclusion:**  
+The project successfully transforms raw HR data into a clean, interactive, and insight-rich Excel dashboard.  
+It combines strong data preparation practices with analytical and visualization techniques to support strategic HR decision-making.
+
+**File created and documented by:** [Your Name]  
+**Year:** 2025
+
+
