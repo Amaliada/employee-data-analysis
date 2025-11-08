@@ -5,7 +5,7 @@
 
 ## 🧹 Data Preparation
 
-- Combined two raw Excel files (`India Staff` and `All Staff`) into one unified dataset.  
+- Combined two raw Excel files (`India Staff` and `Data`) into one unified dataset.  
 - Cleaned and standardized columns (renamed, removed duplicates, handled missing values).  
 - Converted `Salary` to USD format and added computed columns:
   - **Bonus Added Salary** → `=Salary + Bonus`
@@ -14,7 +14,7 @@
 - Created numeric mapping for ratings (1–5 scale) using `XLOOKUP`.
 
 For detailed technical notes, see:  
-📄 [`docs/data-cleaning-notes.md`](docs/data-cleaning-notes.md)
+📄 [`docs/data-cleaning-notes.md.txt`](docs/data-cleaning-notes.md.txt)
 
 ---
 
